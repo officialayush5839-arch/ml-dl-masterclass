@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Machine Learning — Presented by Ayush Vishwakarma</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#ff5500',
+              orangeBright: '#ff6a00',
+              lime: '#a3e635',
+              limeDark: '#4d7c0f',
+              dark: '#070912',
+              card: '#0d111e'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Complete bulletproof styles if CDN fails */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #070912;
+      color: #f1f5f9;
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Reference PPT Lime Cards */
+    .ppt-lime-card {
+      background: rgba(13, 17, 30, 0.85);
+      border: 1.5px solid rgba(163, 230, 53, 0.6);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 20px -4px rgba(163, 230, 53, 0.2);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ppt-lime-card:hover {
+      border-color: #a3e635;
+      box-shadow: 0 14px 40px -8px rgba(0, 0, 0, 0.8), 0 0 30px 0px rgba(163, 230, 53, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .ppt-orange-card {
+      background: rgba(13, 17, 30, 0.85);
+      border: 1.5px solid rgba(255, 85, 0, 0.6);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 25px -4px rgba(255, 85, 0, 0.25);
+      backdrop-filter: blur(16px);
+      transition: all 0.25s ease;
+    }
+    .ppt-orange-card:hover {
+      border-color: #ff5500;
+      box-shadow: 0 14px 40px -8px rgba(0, 0, 0, 0.8), 0 0 35px 2px rgba(255, 85, 0, 0.4);
+    }
+
+    .ppt-divider {
+      height: 2px;
+      background: linear-gradient(90deg, #ff5500 0%, #ff7700 70%, transparent 100%);
+    }
+
+    .ppt-step-num {
+      color: #ff5500;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+    }
+
+    /* Glows */
+    .glow-orange {
+      box-shadow: 0 0 35px rgba(255, 85, 0, 0.5);
+    }
+    .text-glow-orange {
+      text-shadow: 0 0 25px rgba(255, 85, 0, 0.6);
+    }
+    .glow-lime {
+      box-shadow: 0 0 30px rgba(163, 230, 53, 0.4);
+    }
+
+    /* Canvas styling */
+    canvas {
+      display: block;
+    }
+
+    /* Slide transition */
+    .slide-viewport {
+      perspective: 1200px;
+    }
+    .slide-container {
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide-hidden-prev {
+      opacity: 0;
+      transform: translateX(-40px) scale(0.98);
+      pointer-events: none;
+      display: none;
+    }
+    .slide-hidden-next {
+      opacity: 0;
+      transform: translateX(40px) scale(0.98);
+      pointer-events: none;
+      display: none;
+    }
+    .slide-active {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      display: flex;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(7, 9, 18, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+    }
+
+    /* Neon Pulse Keyframes */
+    @keyframes orangePulse {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50% { transform: scale(1.08); opacity: 0.6; }
+    }
+    .orange-pulse-ambient {
+      animation: orangePulse 5s ease-in-out infinite;
+    }
+
+    @keyframes beamFlow {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+    .beam-flow {
+      background-size: 200% 200%;
+      animation: beamFlow 3s linear infinite;
+    }
+  </style>
+</head>
+<body class="w-screen h-screen relative flex flex-col justify-between select-none bg-[#070912]">
+
+  <!-- Ambient Light Orbs -->
+  <div class="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-orange-600/15 blur-[160px] pointer-events-none orange-pulse-ambient"></div>
+  <div class="fixed bottom-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full bg-lime-600/10 blur-[150px] pointer-events-none"></div>
+
+  <!-- Background Animated Cyber Matrix & Glowing Embers Canvas -->
+  <canvas id="bg-canvas" class="fixed inset-0 w-full h-full -z-10 pointer-events-none"></canvas>
+
+  <!-- ==========================================
+       TOP NAVIGATION BAR
+       ========================================== -->
+  <header class="w-full px-6 py-3 flex items-center justify-between z-30 bg-[#0a0d1a]/90 backdrop-blur-xl border-b border-white/10 shrink-0">
+    <div class="flex items-center gap-3.5">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#ff5500] to-[#ff7700] flex items-center justify-center shadow-lg shadow-orange-500/30">
+        <i data-lucide="cpu" class="w-4 h-4 text-white"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="font-bold text-[#ff5500] uppercase tracking-wider font-mono">MACHINE LEARNING</span>
+          <span class="text-slate-500">•</span>
+          <span class="text-slate-300 font-medium hidden sm:inline">Ayush Vishwakarma</span>
+        </div>
+        <div id="slide-topic-badge" class="text-xs text-slate-400 font-mono">01. Title & Introduction</div>
+      </div>
+    </div>
+
+    <!-- Center Progress Indicators -->
+    <div class="hidden md:flex flex-col items-center gap-1.5 max-w-sm w-full px-4">
+      <div class="flex items-center justify-between w-full text-xs font-mono">
+        <span class="text-slate-400">Progress</span>
+        <span id="slide-counter" class="text-[#ff5500] font-bold">01 / 10</span>
+      </div>
+      <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5 flex">
+        <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-[#ff5500] to-[#a3e635] rounded-full transition-all duration-300" style="width: 10%;"></div>
+      </div>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="flex items-center gap-2">
+      <!-- Switch to Visual Edition -->
+      <a href="presentation_visual.html" class="px-2.5 py-1.5 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-[#ff5500]/50 text-xs font-semibold text-[#ff5500] transition-colors flex items-center gap-1.5">
+        <i data-lucide="image" class="w-3.5 h-3.5"></i>
+        <span>Visual Edition</span>
+      </a>
+
+      <!-- Challenge / Class Timer -->
+      <div class="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-slate-300">
+        <i data-lucide="clock" class="w-3.5 h-3.5 text-[#ff5500]"></i>
+        <span id="timer-display">00:00</span>
+      </div>
+
+      <!-- Slide Overview Grid Button -->
+      <button onclick="toggleOverviewModal()" title="Slide Overview [O]" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-colors">
+        <i data-lucide="grid" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Teacher Notes Drawer Toggle -->
+      <button onclick="toggleNotesDrawer()" id="notes-btn" title="Presenter Notes [N]" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-orange-500/10 border border-white/10 text-xs font-medium text-slate-300 hover:text-[#ff5500] transition-colors flex items-center gap-1.5">
+        <i data-lucide="file-text" class="w-4 h-4 text-[#ff5500]"></i>
+        <span class="hidden sm:inline">Notes</span>
+      </button>
+
+      <!-- Fullscreen Toggle -->
+      <button onclick="toggleFullScreen()" title="Fullscreen [F]" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-colors">
+        <i data-lucide="maximize" id="fullscreen-icon" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       MAIN PRESENTATION SLIDES VIEWPORT
+       ========================================== -->
+  <main class="flex-1 w-full relative overflow-y-auto overflow-x-hidden p-4 md:p-8 flex items-center justify-center slide-viewport">
+
+    <!-- ==========================================
+         SLIDE 1: Title / Machine Learning (with 3D Neural Chip + 2D Particle Waves)
+         ========================================== -->
+    <section class="slide-container slide-active w-full max-w-6xl flex-col gap-6" data-slide="1" data-title="Machine Learning" data-category="Introduction">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <!-- Left Content -->
+        <div class="lg:col-span-7 flex flex-col gap-5">
+          <div class="space-y-1">
+            <h1 class="text-5xl md:text-7xl font-black tracking-tight text-white uppercase leading-none">
+              MACHINE<br>
+              <span class="text-white">LEARNING</span>
+            </h1>
+          </div>
+
+          <div class="space-y-1.5">
+            <p class="text-base md:text-lg text-slate-300 font-light">
+              An Introduction to ML, Deep Learning & the AI Ecosystem
+            </p>
+            <p class="text-sm text-slate-400 font-light">
+              Teaching Machines to Learn from Data
+            </p>
+            <div class="text-sm font-semibold text-[#ff5500] tracking-wide pt-1">
+              Presented by Ayush Vishwakarma
+            </div>
+          </div>
+
+          <!-- Bottom 5-Step Pipeline (Exact from PPT Slide 1) with LIVE pulsing energy flow -->
+          <div class="pt-4 border-t border-white/10 flex flex-wrap items-center gap-3 sm:gap-5 text-xs font-bold font-mono">
+            <div class="flex items-center gap-1 border-b-2 border-[#ff5500] pb-1 bg-orange-500/10 px-2 py-0.5 rounded">
+              <span class="text-[#ff5500] font-black">01</span>
+              <span class="text-white tracking-wider">DATA</span>
+            </div>
+            <span class="text-[#ff5500] animate-pulse">➔</span>
+            <div class="flex items-center gap-1 border-b-2 border-[#ff5500] pb-1 bg-orange-500/10 px-2 py-0.5 rounded">
+              <span class="text-[#ff5500] font-black">02</span>
+              <span class="text-white tracking-wider">LEARNING</span>
+            </div>
+            <span class="text-[#ff5500] animate-pulse">➔</span>
+            <div class="flex items-center gap-1 border-b-2 border-[#ff5500] pb-1 bg-orange-500/10 px-2 py-0.5 rounded">
+              <span class="text-[#ff5500] font-black">03</span>
+              <span class="text-white tracking-wider">MODEL</span>
+            </div>
+            <span class="text-[#ff5500] animate-pulse">➔</span>
+            <div class="flex items-center gap-1 border-b-2 border-[#ff5500] pb-1 bg-orange-500/10 px-2 py-0.5 rounded">
+              <span class="text-[#ff5500] font-black">04</span>
+              <span class="text-white tracking-wider">PREDICTION</span>
+            </div>
+            <span class="text-[#ff5500] animate-pulse">➔</span>
+            <div class="flex items-center gap-1 border-b-2 border-[#ff5500] pb-1 bg-orange-500/10 px-2 py-0.5 rounded">
+              <span class="text-[#ff5500] font-black">05</span>
+              <span class="text-white tracking-wider">DECISION</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right 3D Interactive AI Processor / Neural Chip -->
+        <div class="lg:col-span-5 flex flex-col items-center justify-center">
+          <div class="w-full h-80 md:h-96 rounded-2xl bg-[#0a0d1a]/95 border border-[#ff5500]/40 relative overflow-hidden flex flex-col items-center justify-center shadow-2xl group">
+            <canvas id="chip-canvas" class="w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+            
+            <!-- Floating interactive hint -->
+            <div class="absolute bottom-3 left-3 right-3 text-center text-[11px] font-mono text-slate-300 bg-slate-950/85 py-1.5 px-3 rounded-lg backdrop-blur-md border border-[#ff5500]/30 pointer-events-none">
+              ✨ 3D Neural Processor Core • Drag to rotate in 3D
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 2: Can a machine learn? (with 2D Data Classification Visualizer)
+         ========================================== -->
+    <section class="slide-container slide-hidden-next w-full max-w-6xl flex-col gap-6" data-slide="2" data-title="Can a machine learn?" data-category="Core Question">
+      <h2 class="text-3xl md:text-5xl font-black text-white leading-tight">
+        Can a machine learn without<br>being explicitly programmed?
+      </h2>
+
+      <!-- 3 Lime Border Cards (Exact from PPT) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-1">
+        <div class="ppt-lime-card p-5 rounded-xl flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-white">YouTube / Netflix</h3>
+            <span class="w-2 h-2 rounded-full bg-[#a3e635] animate-ping"></span>
+          </div>
+          <p class="text-sm text-slate-300">What should you watch next?</p>
+        </div>
+
+        <div class="ppt-lime-card p-5 rounded-xl flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-white">Email</h3>
+            <span class="w-2 h-2 rounded-full bg-[#a3e635] animate-ping"></span>
+          </div>
+          <p class="text-sm text-slate-300">Is this spam?</p>
+        </div>
+
+        <div class="ppt-lime-card p-5 rounded-xl flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-white">Phone Camera</h3>
+            <span class="w-2 h-2 rounded-full bg-[#a3e635] animate-ping"></span>
+          </div>
+          <p class="text-sm text-slate-300">What is in this image?</p>
+        </div>
+      </div>
+
+      <!-- Live 2D Pattern Recognition Canvas + Interactive Question -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center mt-2">
+        <!-- Interactive Question (Left) -->
+        <div class="lg:col-span-7 flex flex-col gap-3">
+          <div class="text-base font-bold text-white">How does the machine know?</div>
+          
+          <div class="grid grid-cols-1 gap-2.5">
+            <button onclick="chooseSlide2Option('A')" id="s2-opt-A" class="text-left p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs sm:text-sm text-slate-200 transition-all flex items-center justify-between">
+              <div><strong class="text-slate-400">A.</strong> Someone programmed every possibility</div>
+              <span id="s2-badge-A" class="hidden text-xs text-rose-400 font-mono">Incorrect</span>
+            </button>
+
+            <button onclick="chooseSlide2Option('B')" id="s2-opt-B" class="text-left p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs sm:text-sm text-slate-200 transition-all flex items-center justify-between">
+              <div><strong class="text-[#a3e635]">B.</strong> The machine learned patterns from data</div>
+              <span id="s2-badge-B" class="hidden text-xs text-[#a3e635] font-mono font-bold">✓ CORRECT!</span>
+            </button>
+
+            <button onclick="chooseSlide2Option('C')" id="s2-opt-C" class="text-left p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs sm:text-sm text-slate-200 transition-all flex items-center justify-between">
+              <div><strong class="text-slate-400">C.</strong> The machine guesses randomly</div>
+              <span id="s2-badge-C" class="hidden text-xs text-rose-400 font-mono">Incorrect</span>
+            </button>
+          </div>
+
+          <!-- Orange Reveal Bar (Exact from PPT) -->
+          <div class="pt-2">
+            <div class="ppt-divider mb-3"></div>
+            <div id="s2-reveal-box" class="flex items-center justify-between">
+              <div class="text-sm md:text-base font-semibold text-[#ff5500]">
+                Reveal: <span class="text-white">B · It learns patterns from data.</span>
+              </div>
+              <button onclick="triggerConfettiSlide2()" class="text-xs font-mono px-3 py-1.5 rounded-lg bg-[#ff5500]/20 text-[#ff5500] border border-[#ff5500]/40 hover:bg-[#ff5500]/30 transition-colors">
+                🎉 Verify Answer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2D Interactive Scatter Decision Canvas (Right) -->
+        <div class="lg:col-span-5 bg-[#0d111e]/90 p-3 rounded-2xl border border-white/10 flex flex-col items-center">
+          <div class="flex items-center justify-between w-full text-xs font-mono text-slate-400 pb-2 px-1">
+            <span>2D Pattern Learning Simulation</span>
+            <button onclick="resetSlide2Points()" class="text-[10px] text-[#ff5500] hover:underline">↺ Reset</button>
+          </div>
+          <canvas id="slide2-canvas" width="340" height="170" class="rounded-xl bg-black/60 border border-white/5 w-full"></canvas>
+          <div class="text-[10px] text-slate-400 font-mono pt-2">Click canvas to add new data points! Watch the boundary adapt.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 3: What actually is ML? (with 2D Dataflow Pipeline Simulation)
+         ========================================== -->
+    <section class="slide-container slide-hidden-next w-full max-w-6xl flex-col gap-6" data-slide="3" data-title="What actually is ML?" data-category="Comparison">
+      <h2 class="text-3xl md:text-5xl font-black text-white">
+        What actually is Machine Learning?
+      </h2>
+
+      <!-- Side-by-side comparison (Exact from PPT) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+        <!-- Traditional Programming -->
+        <div class="flex flex-col gap-3 p-5 rounded-2xl bg-[#0d111e]/80 border border-white/10">
+          <div class="text-base font-bold text-white flex items-center justify-between">
+            <span>Traditional Programming</span>
+            <span class="text-xs font-mono text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">Deterministic</span>
+          </div>
+          <div class="text-sm font-mono font-bold text-[#ff5500]">RULES + DATA</div>
+          <div class="text-base text-slate-500 font-mono">↓</div>
+          <div class="text-sm font-mono font-bold text-white">OUTPUT</div>
+
+          <div class="bg-black/60 p-3 rounded-xl border border-white/5 text-xs font-mono text-slate-300">
+            If temperature &gt; 30°C<br>
+            ➔ Turn Fan ON
+          </div>
+
+          <!-- Mini Interactive Fan Tester -->
+          <div class="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between text-xs">
+            <span class="text-slate-400">Test Temp: <strong id="temp-val" class="text-white">32°C</strong></span>
+            <input type="range" min="15" max="45" value="32" oninput="updateFanTest(this.value)" class="w-28 accent-[#ff5500]">
+            <span id="fan-status" class="px-2 py-0.5 rounded font-mono font-bold bg-emerald-500/20 text-emerald-400">FAN: ON</span>
+          </div>
+        </div>
+
+        <!-- Machine Learning -->
+        <div class="flex flex-col gap-3 p-5 rounded-2xl bg-[#0d111e]/80 border border-[#a3e635]/40 shadow-lg shadow-lime-500/10">
+          <div class="text-base font-bold text-white flex items-center justify-between">
+            <span>Machine Learning</span>
+            <span class="text-xs font-mono text-[#a3e635] bg-lime-500/10 px-2 py-0.5 rounded border border-lime-500/20">Probabilistic</span>
+          </div>
+          <div class="text-sm font-mono font-bold text-[#ff5500]">DATA + EXAMPLES</div>
+          <div class="text-base text-slate-500 font-mono">↓</div>
+          <div class="text-sm font-mono font-bold text-white">MODEL ➔ PREDICTION</div>
+
+          <div class="bg-black/60 p-3 rounded-xl border border-white/5 text-xs font-mono text-slate-300">
+            House Features ➔ TrainingData<br>
+            ➔ ML Model ➔ Predicted Price
+          </div>
+
+          <!-- Live 2D Neural Confidence Gauge -->
+          <div class="mt-2 p-2.5 rounded-lg bg-black/50 border border-white/5 flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-300">Prediction: <strong class="text-[#a3e635]">$412,000</strong></span>
+            <span class="text-slate-400">Confidence: <span class="text-[#ff5500] font-bold">98.4%</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Core Formula & Cat/Dog Question (Exact from PPT) -->
+      <div class="mt-2 space-y-3">
+        <div class="text-base md:text-lg font-medium text-white">
+          <span class="text-[#ff5500] font-bold">ML =</span> Learning patterns from data to make predictions or decisions.
+        </div>
+
+        <div class="ppt-divider"></div>
+
+        <div class="space-y-1 text-xs md:text-sm text-slate-300">
+          <p>10,000 pictures of cats and dogs. Rules for every possible cat?</p>
+          <p class="font-semibold text-white">
+            Answer: <span class="text-[#ff5500]">No. That is where ML becomes useful.</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 4: HOW DOES ML LEARN? (with 3 Live Interactive Mini Canvases)
+         ========================================== -->
+    <section class="slide-container slide-hidden-next w-full max-w-6xl flex-col gap-5" data-slide="4" data-title="How does ML Learn?" data-category="Three Pillars">
+      <h2 class="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+        HOW DOES ML LEARN?
+      </h2>
+
+      <!-- 3 Pillars (Exact from PPT) with Interactive 2D Visualizers -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Supervised -->
+        <div class="ppt-lime-card p-5 rounded-xl flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <div class="text-base font-bold text-white uppercase tracking-wider">SUPERVISED</div>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Labeled</span>
+          </div>
+          <div class="text-xs text-slate-300">Learn from labeled examples.</div>
+          <div class="text-xs font-mono text-[#ff5500] font-bold">
+            Input ➔ Correct Answer
+          </div>
+
+          <!-- 2D Regression Canvas -->
+          <div class="bg-black/60 p-2 rounded-lg border border-white/5 my-1">
+            <canvas id="supervised-canvas" width="220" height="85" class="w-full"></canvas>
+            <div class="text-[9px] font-mono text-center text-slate-400">Live Linear Regression Fit</div>
+          </div>
+
+          <div class="space-y-1 text-xs text-slate-300 pt-1 border-t border-white/10">
+            <div>• Spam / Not Spam</div>
+            <div>• House-price prediction</div>
+            <div>• Image classification</div>
+            <div>• Disease prediction</div>
+          </div>
+        </div>
+
+        <!-- Unsupervised -->
+        <div class="ppt-lime-card p-5 rounded-xl flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <div class="text-base font-bold text-white uppercase tracking-wider">UNSUPERVISED</div>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">Unlabeled</span>
+          </div>
+          <div class="text-xs text-slate-300">Find patterns without labels.</div>
+          <div class="text-xs font-mono text-[#ff5500] font-bold">
+            Input ➔ Discover Structure
+          </div>
+
+          <!-- 2D K-Means Clustering Canvas -->
+          <div class="bg-black/60 p-2 rounded-lg border border-white/5 my-1">
+            <canvas id="unsupervised-canvas" width="220" height="85" class="w-full"></canvas>
+            <div class="text-[9px] font-mono text-center text-slate-400">Live K-Means Clustering</div>
+          </div>
+
+          <div class="space-y-1 text-xs text-slate-300 pt-1 border-t border-white/10">
+            <div>• Customer segmentation</div>
+            <div>• Anomaly detection</div>
+            <div>• Grouping documents</div>
+            <div>• Recommendation systems</div>
+          </div>
+        </div>
+
+        <!-- Reinforcement -->
+        <div class="ppt-lime-card p-5 rounded-xl flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <div class="text-base font-bold text-white uppercase tracking-wider">REINFORCEMENT</div>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">Rewards</span>
+          </div>
+          <div class="text-xs text-slate-300">Learn through rewards & penalties.</div>
+          <div class="text-xs font-mono text-[#ff5500] font-bold">
+            Action ➔ Reward / Penalty ➔ Better Action
+          </div>
+
+          <!-- 2D RL Grid Agent Canvas -->
+          <div class="bg-black/60 p-2 rounded-lg border border-white/5 my-1">
+            <canvas id="rl-canvas" width="220" height="85" class="w-full"></canvas>
+            <div class="text-[9px] font-mono text-center text-slate-400">Live RL Agent Goal Navigation</div>
+          </div>
+
+          <div class="space-y-1 text-xs text-slate-300 pt-1 border-t border-white/10">
+            <div>• Robotics</div>
+            <div>• Game agents</div>
+            <div>• Autonomous systems</div>
+            <div>• Optimization</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Question (Exact from PPT) -->
+      <div class="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="text-xs md:text-sm text-slate-300">
+          Predict whether a student will pass using attendance, marks and study hours. Which type?
+        </div>
+        <div class="text-xs md:text-sm font-bold text-[#ff5500] font-mono bg-orange-500/10 px-3 py-1 rounded border border-[#ff5500]/30">
+          Answer: SUPERVISED LEARNING
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 5: THE AI FAMILY TREE (with 2D Living Hierarchy Tree Canvas)
+         ========================================== -->
+    <section class="slide-container slide-hidden-next w-full max-w-6xl flex-col gap-5" data-slide="5" data-title="The AI Family Tree" data-category="Taxonomy">
+      <h2 class="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+        THE AI FAMILY TREE
+      </h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <!-- Interactive Animated Tree Canvas (Left) -->
+        <div class="lg:col-span-7 bg-[#0d111e]/90 p-4 rounded-2xl border border-white/10 flex flex-col items-center">
+          <div class="flex items-center justify-between w-full text-xs font-mono text-slate-400 pb-2 px-1">
+            <span>Interactive Living AI Tree</span>
+            <span class="text-[#ff5500] text-[10px]">Hover or click nodes</span>
+          </div>
+          <canvas id="tree-canvas" width="480" height="260" class="rounded-xl bg-black/60 border border-white/5 w-full cursor-pointer"></canvas>
+        </div>
+
+        <!-- Right Explanation (Exact from PPT) -->
+        <div class="lg:col-span-5 flex flex-col gap-5">
+          <div class="ppt-lime-card p-4 rounded-xl">
+            <h3 class="text-lg font-bold text-white mb-1">Deep Learning</h3>
+            <p class="text-xs md:text-sm text-slate-300 leading-relaxed font-light">
+              Neural networks with many layers learn complex representations from large amounts of data.
+            </p>
+          </div>
+
+          <div class="ppt-orange-card p-4 rounded-xl">
+            <h3 class="text-lg font-bold text-white mb-1">Generative AI</h3>
+            <p class="text-xs md:text-sm text-slate-300 leading-relaxed font-light">
+              Models that generate new content instead of only classifying or predicting.
+            </p>
+            <div class="mt-2 text-xs font-mono font-bold text-[#ff5500] tracking-wider">
+              TEXT • IMAGES • AUDIO • VIDEO • CODE
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Question (Exact from PPT) -->
+      <div class="pt-3 border-t border-white/10 space-y-1">
+        <div class="text-xs md:text-sm text-slate-300">
+          ChatGPT writes an essay. Is that classification?
+        </div>
+        <div class="text-sm md:text-base font-bold text-[#ff5500]">
+          Answer: No — it is generative modeling.
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 6: MEET GANs (with 2D Generator vs Discriminator Arena)
+         ========================================== -->
+    <section class="slide-container slide-hidden-next w-full max-w-6xl flex-col gap-5" data-slide="6" data-title="Meet GANs" data-category="Generative AI">
+      <div class="space-y-1">
+        <h2 class="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+          MEET GANs
+        </h2>
+        <div class="text-base md:text-lg font-bold text-[#ff5500] uppercase tracking-wider font-mono">
+          GENERATIVE ADVERSARIAL NETWORKS
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <!-- Generator vs Discriminator Loop & Canvas (Left) -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+          <div class="flex items-center gap-3">
+            <div class="ppt-lime-card p-4 rounded-xl flex-1 text-center">
+              <div class="text-sm font-bold text-white uppercase">GENERATOR</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">Creates fake samples</div>
+            </div>
+
+            <div class="text-[#ff5500] font-black text-lg animate-pulse">➔</div>
+
+            <div class="ppt-lime-card p-4 rounded-xl flex-1 text-center">
+              <div class="text-sm font-bold text-white uppercase">DISCRIMINATOR</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">Real or Fake?</div>
+            </div>
+          </div>
+
+          <div class="text-xs font-mono font-bold text-center text-[#ff5500] tracking-widest">
+            COMPETE ➔ LEARN ➔ IMPROVE
+          </div>
+
+          <!-- 2D GAN Training Simulation Canvas -->
+          <div class="bg-[#0d111e]/90 p-3 rounded-xl border border-white/10">
+            <canvas id="gan-canvas" width="460" height="85" class="w-full bg-black/50 rounded-lg"></canvas>
+            <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1">
+              <span>Generator Loss: <span id="gen-loss" class="text-[#ff5500]">0.42</span></span>
+              <span>Discriminator Accuracy: <span id="disc-acc" class="text-[#a3e635]">51% (Balanced)</span></span>
+            </div>
+          </div>
+
+          <div class="bg-black/50 p-3 rounded-xl border border-white/10 space-y-1 text-xs font-mono text-slate-300">
+            <div>“Here is a fake painting.” ➔ <span class="text-rose-400">“That's fake.”</span> ➔ <span class="text-cyan-400">“I'll make a better one.”</span></div>
+            <div class="text-[#a3e635] font-bold">Eventually: highly realistic outputs (Images • Audio • Video • Text • Code)</div>
+          </div>
+        </div>
+
+        <!-- Right Side: Turing Test Guess A vs B (Exact from PPT) -->
+        <div class="lg:col-span-5 bg-[#0d111e]/90 p-5 rounded-2xl border border-white/10 flex flex-col gap-3">
+          <div class="text-sm font-bold text-white">Which image was generated?</div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="guessPainting('A')" class="p-2.5 rounded-xl bg-black/60 hover:border-orange-500/50 border border-white/10 flex flex-col items-center gap-1.5 transition-all">
+              <div class="w-full h-24 rounded bg-gradient-to-tr from-amber-950 via-slate-800 to-amber-700 flex items-center justify-center text-xs font-mono text-slate-300 shadow-inner">
+                🖼️ Painting A
+              </div>
+              <span class="text-xs font-mono font-bold text-white">Sample A</span>
+            </button>
+
+            <button onclick="guessPainting('B')" class="p-2.5 rounded-xl bg-black/60 hover:border-orange-500/50 border border-white/10 flex flex-col items-center gap-1.5 transition-all">
+              <div class="w-full h-24 rounded bg-gradient-to-tr from-slate-900 via-indigo-950 to-emerald-900 flex items-center justify-center text-xs font-mono text-slate-300 shadow-inner">
+                🖼️ Painting B
+              </div>
+              <span class="text-xs font-mono font-bold text-white">Sample B</span>
+            </button>
+          </div>
+
+          <div class="text-xs text-slate-400 italic">Guess before the reveal.</div>
+          <div id="gan-reveal-text" class="text-xs md:text-sm font-bold text-[#ff5500]">
+            Reveal: both samples are AI-generated.
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Note (Exact from PPT) -->
+      <div class="pt-2 border-t border-white/10 text-xs text-slate-400">
+        GANs are an important generative-model family; modern generative AI also includes diffusion and transformer-based models.
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 7: ML Across Industries (with 2D Laser Radar Visualizer & 30s Challenge)
+         ========================================== -->
+    <section class="slide-container slide-hidden-next w-full max-w-6xl flex-col gap-5" data-slide="7" data-title="ML Across Industries" data-category="Applications">
+      <div class="space-y-1">
+        <h2 class="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+          ML IS NOT ONE INDUSTRY.
+        </h2>
+        <div class="text-xl md:text-2xl font-black text-[#ff5500] uppercase tracking-tight">
+          IT'S A LAYER ACROSS INDUSTRIES.
+        </div>
+      </div>
+
+      <!-- 6 Industry Cards (Exact from PPT) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- HEALTHCARE -->
+        <div class="ppt-lime-card p-4 rounded-xl flex flex-col gap-1.5 cursor-pointer" onclick="laserHighlightIndustry(0)">
+          <div class="text-sm font-bold text-white uppercase flex items-center justify-between">
+            <span>HEALTHCARE</span>
+            <span class="text-xs text-rose-400">🏥</span>
+          </div>
+          <div class="space-y-0.5 text-xs text-slate-300">
+            <div>Diagnosis</div>
+            <div>Drug discovery</div>
+            <div>Medical imaging</div>
+          </div>
+        </div>
+
+        <!-- FINANCE -->
+        <div class="ppt-lime-card p-4 rounded-xl flex flex-col gap-1.5 cursor-pointer" onclick="laserHighlightIndustry(1)">
+          <div class="text-sm font-bold text-white uppercase flex items-center justify-between">
+            <span>FINANCE</span>
+            <span class="text-xs text-emerald-400">💳</span>
+          </div>
+          <div class="space-y-0.5 text-xs text-slate-300">
+            <div>Fraud detection</div>
+            <div>Risk scoring</div>
+            <div>Algorithmic systems</div>
+          </div>
+        </div>
+
+        <!-- AUTOMOTIVE -->
+        <div class="ppt-lime-card p-4 rounded-xl flex flex-col gap-1.5 cursor-pointer" onclick="laserHighlightIndustry(2)">
+          <div class="text-sm font-bold text-white uppercase flex items-center justify-between">
+            <span>AUTOMOTIVE</span>
+            <span class="text-xs text-cyan-400">🚗</span>
+          </div>
+          <div class="space-y-0.5 text-xs text-slate-300">
+            <div>ADAS</div>
+            <div>Autonomous driving</div>
+            <div>Predictive maintenance</div>
+          </div>
+        </div>
+
+        <!-- E-COMMERCE -->
+        <div class="ppt-lime-card p-4 rounded-xl flex flex-col gap-1.5 cursor-pointer" onclick="laserHighlightIndustry(3)">
+          <div class="text-sm font-bold text-white uppercase flex items-center justify-between">
+            <span>E-COMMERCE</span>
+            <span class="text-xs text-amber-400">🛒</span>
+          </div>
+          <div class="space-y-0.5 text-xs text-slate-300">
+            <div>Recommendations</div>
+            <div>Search</div>
+            <div>Demand forecasting</div>
+          </div>
+        </div>
+
+        <!-- CYBERSECURITY -->
+        <div class="ppt-lime-card p-4 rounded-xl flex flex-col gap-1.5 cursor-pointer" onclick="laserHighlightIndustry(4)">
+          <div class="text-sm font-bold text-white uppercase flex items-center justify-between">
+            <span>CYBERSECURITY</span>
+            <span class="text-xs text-purple-400">🛡️</span>
+          </div>
+          <div class="space-y-0.5 text-xs text-slate-300">
+            <div>Threat detection</div>
+            <div>Anomaly detection</div>
+            <div>Malware analysis</div>
+          </div>
+        </div>
+
+        <!-- MEDIA -->
+        <div class="ppt-lime-card p-4 rounded-xl flex flex-col gap-1.5 cursor-pointer" onclick="laserHighlightIndustry(5)">
+          <div class="text-sm font-bold text-white uppercase flex items-center justify-between">
+            <span>MEDIA</span>
+            <span class="text-xs text-pink-400">🎬</span>
+          </div>
+          <div class="space-y-0.5 text-xs text-slate-300">
+            <div>Recommendations</div>
+            <div>Content generation</div>
+            <div>Personalization</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-xs md:text-sm text-slate-300 font-light">
+        If an industry has data, ML can potentially create value.
+      </div>
+
+      <!-- 30s Challenge with Countdown Timer! -->
+      <div class="pt-2 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="text-xs md:text-sm text-slate-200">
+          <strong class="text-[#ff5500]">Challenge: 30 seconds.</strong> Pick one industry. What is ONE problem ML could solve?
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div id="challenge-timer" class="font-mono text-sm font-bold text-[#ff5500] px-3 py-1 rounded bg-[#ff5500]/10 border border-[#ff5500]/30 shadow-lg shadow-orange-500/20">
+            00:30
+          </div>
+          <button onclick="startChallengeTimer()" class="text-xs font-mono px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-white transition-colors">
+            ▶ Start 30s
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 8: Problem First (with 2D Interactive Conveyor Pipeline)
+         ========================================== -->
+    <section class="slide-container slide-hidden-next w-full max-w-6xl flex-col gap-4" data-slide="8" data-title="Problem First" data-category="Workflow">
+      <div class="space-y-1">
+        <h2 class="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+          DON'T START WITH "I WANT TO USE AI."
+        </h2>
+        <div class="text-base font-bold text-[#ff5500] uppercase tracking-wider font-mono">
+          START WITH: "WHAT PROBLEM DO I HAVE?"
+        </div>
+      </div>
+
+      <!-- 8-Stage Animated Conveyor Pipeline (Exact from PPT) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 pt-1">
+        <div onclick="pulseStage(1)" class="p-2 rounded-lg bg-black/50 border border-white/10 text-center cursor-pointer hover:border-[#ff5500] transition-colors">
+          <div class="ppt-step-num text-xs">01</div>
+          <div class="text-[11px] font-bold text-white">PROBLEM</div>
+        </div>
+        <div onclick="pulseStage(2)" class="p-2 rounded-lg bg-black/50 border border-white/10 text-center cursor-pointer hover:border-[#ff5500] transition-colors">
+          <div class="ppt-step-num text-xs">02</div>
+          <div class="text-[11px] font-bold text-white">DATA</div>
+        </div>
+        <div onclick="pulseStage(3)" class="p-2 rounded-lg bg-black/50 border border-white/10 text-center cursor-pointer hover:border-[#ff5500] transition-colors">
+          <div class="ppt-step-num text-xs">03</div>
+          <div class="text-[11px] font-bold text-white">CLEAN & PREP</div>
+        </div>
+        <div onclick="pulseStage(4)" class="p-2 rounded-lg bg-black/50 border border-white/10 text-center cursor-pointer hover:border-[#ff5500] transition-colors">
+          <div class="ppt-step-num text-xs">04</div>
+          <div class="text-[11px] font-bold text-white">CHOOSE MODEL</div>
+        </div>
+        <div onclick="pulseStage(5)" class="p-2 rounded-lg bg-black/50 border border-white/10 text-center cursor-pointer hover:border-[#ff5500] transition-colors">
+          <div class="ppt-step-num text-xs">05</div>
+          <div class="text-[11px] font-bold text-white">TRAIN</div>
+        </div>
+        <div onclick="pulseStage(6)" class="p-2 rounded-lg bg-black/50 border border-white/10 text-center cursor-pointer hover:border-[#ff5500] transition-colors">
+          <div class="ppt-step-num text-xs">06</div>
+          <div class="text-[11px] font-bold text-white">EVALUATE</div>
+        </div>
+        <div onclick="pulseStage(7)" class="p-2 rounded-lg bg-black/50 border border-white/10 text-center cursor-pointer hover:border-[#ff5500] transition-colors">
+          <div class="ppt-step-num text-xs">07</div>
+          <div class="text-[11px] font-bold text-white">DEPLOY</div>
+        </div>
+        <div onclick="pulseStage(8)" class="p-2 rounded-lg bg-black/50 border border-white/10 text-center cursor-pointer hover:border-[#ff5500] transition-colors">
+          <div class="ppt-step-num text-xs">08</div>
+          <div class="text-[11px] font-bold text-white">MONITOR</div>
+        </div>
+      </div>
+
+      <!-- Problem ➔ Approach Mapping Table (Exact from PPT) -->
+      <div class="bg-[#0d111e]/85 rounded-xl overflow-hidden border border-white/10 mt-1">
+        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10 text-xs font-mono">
+          <!-- Col 1 -->
+          <div class="p-3.5 space-y-1.5">
+            <div class="flex items-center justify-between text-slate-400 font-bold border-b border-white/10 pb-1">
+              <span>Problem</span>
+              <span>Approach</span>
+            </div>
+            <div class="flex items-center justify-between hover:bg-white/5 p-1 rounded"><span class="text-white">Predict house prices</span><span class="text-[#ff5500] font-bold">Regression</span></div>
+            <div class="flex items-center justify-between hover:bg-white/5 p-1 rounded"><span class="text-white">Detect spam</span><span class="text-[#ff5500] font-bold">Classification</span></div>
+            <div class="flex items-center justify-between hover:bg-white/5 p-1 rounded"><span class="text-white">Group customers</span><span class="text-[#ff5500] font-bold">Clustering</span></div>
+            <div class="flex items-center justify-between hover:bg-white/5 p-1 rounded"><span class="text-white">Detect unusual transactions</span><span class="text-[#ff5500] font-bold">Anomaly Detection</span></div>
+          </div>
+
+          <!-- Col 2 -->
+          <div class="p-3.5 space-y-1.5">
+            <div class="flex items-center justify-between text-slate-400 font-bold border-b border-white/10 pb-1">
+              <span>Problem</span>
+              <span>Approach</span>
+            </div>
+            <div class="flex items-center justify-between hover:bg-white/5 p-1 rounded"><span class="text-white">Recommend products</span><span class="text-[#a3e635] font-bold">Recommender System</span></div>
+            <div class="flex items-center justify-between hover:bg-white/5 p-1 rounded"><span class="text-white">Detect objects</span><span class="text-[#a3e635] font-bold">Deep Learning</span></div>
+            <div class="flex items-center justify-between hover:bg-white/5 p-1 rounded"><span class="text-white">Crop disease detection</span><span class="text-[#a3e635] font-bold">Computer Vision</span></div>
+            <div class="flex items-center justify-between hover:bg-white/5 p-1 rounded"><span class="text-white">Chatbot / document assistant</span><span class="text-[#a3e635] font-bold">NLP + LLM</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-1 text-xs md:text-sm text-slate-300 font-light">
+        A good ML project solves a meaningful problem using data.
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 9: WHAT SKILLS DO YOU ACTUALLY NEED? (with Live Interactive Poll)
+         ========================================== -->
+    <section class="slide-container slide-hidden-next w-full max-w-6xl flex-col gap-5" data-slide="9" data-title="Skills Roadmap" data-category="Career">
+      <h2 class="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+        WHAT SKILLS DO YOU ACTUALLY NEED?
+      </h2>
+
+      <!-- 5 Level Cards (Exact from PPT) with XP Bar Progress -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="ppt-lime-card p-3.5 rounded-xl flex flex-col gap-1.5">
+          <div class="text-xs font-bold text-white uppercase">Level 1 Foundation</div>
+          <p class="text-[11px] text-slate-300">Python • Git • Problem Solving</p>
+          <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-auto">
+            <div class="w-full bg-[#a3e635] h-full"></div>
+          </div>
+        </div>
+
+        <div class="ppt-lime-card p-3.5 rounded-xl flex flex-col gap-1.5">
+          <div class="text-xs font-bold text-white uppercase">Level 2 Data</div>
+          <p class="text-[11px] text-slate-300">NumPy • Pandas • SQL • Visualization</p>
+          <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-auto">
+            <div class="w-[80%] bg-[#a3e635] h-full"></div>
+          </div>
+        </div>
+
+        <div class="ppt-lime-card p-3.5 rounded-xl flex flex-col gap-1.5">
+          <div class="text-xs font-bold text-white uppercase">Level 3 ML</div>
+          <p class="text-[11px] text-slate-300">Scikit-learn • Regression • Classification • Clustering</p>
+          <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-auto">
+            <div class="w-[60%] bg-[#a3e635] h-full"></div>
+          </div>
+        </div>
+
+        <div class="ppt-lime-card p-3.5 rounded-xl flex flex-col gap-1.5">
+          <div class="text-xs font-bold text-white uppercase">Level 4 Deep Learning</div>
+          <p class="text-[11px] text-slate-300">PyTorch / TensorFlow • Neural Networks • CNNs • Transformers</p>
+          <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-auto">
+            <div class="w-[40%] bg-[#a3e635] h-full"></div>
+          </div>
+        </div>
+
+        <div class="ppt-lime-card p-3.5 rounded-xl flex flex-col gap-1.5">
+          <div class="text-xs font-bold text-white uppercase">Level 5 Production</div>
+          <p class="text-[11px] text-slate-300">APIs • Docker • Cloud • MLOps • Monitoring</p>
+          <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-auto">
+            <div class="w-[20%] bg-[#a3e635] h-full"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Career Paths & Golden Flow -->
+      <div class="bg-black/50 p-3.5 rounded-xl border border-white/10 space-y-1.5 text-xs">
+        <div class="text-slate-300">
+          <strong class="text-white">Careers:</strong> ML Engineer • Data Scientist • AI / Deep Learning Engineer • MLOps Engineer • Computer Vision Engineer • NLP / LLM Engineer • Research Engineer • AI Researcher
+        </div>
+        <div class="text-[#a3e635] font-semibold">
+          You do NOT need to learn everything before building your first project.
+        </div>
+      </div>
+
+      <div class="font-mono text-xs sm:text-sm font-bold text-white flex flex-wrap items-center gap-2">
+        <span>Python</span><span class="text-[#ff5500]">➔</span>
+        <span>Data</span><span class="text-[#ff5500]">➔</span>
+        <span>Basic ML</span><span class="text-[#ff5500]">➔</span>
+        <span>Project</span><span class="text-[#ff5500]">➔</span>
+        <span>Deep Learning</span>
+      </div>
+
+      <!-- Interactive Live Classroom Poll (Exact from PPT) -->
+      <div class="pt-2 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <div class="text-slate-300">
+          <strong class="text-[#ff5500]">Poll:</strong> Which role sounds most interesting?
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="voteRole('BUILD')" class="px-3 py-1 rounded-lg bg-white/5 hover:bg-[#ff5500]/20 hover:text-[#ff5500] border border-white/10 font-mono text-xs text-slate-200 transition-colors">BUILD</button>
+          <button onclick="voteRole('ANALYZE')" class="px-3 py-1 rounded-lg bg-white/5 hover:bg-[#ff5500]/20 hover:text-[#ff5500] border border-white/10 font-mono text-xs text-slate-200 transition-colors">ANALYZE</button>
+          <button onclick="voteRole('RESEARCH')" class="px-3 py-1 rounded-lg bg-white/5 hover:bg-[#ff5500]/20 hover:text-[#ff5500] border border-white/10 font-mono text-xs text-slate-200 transition-colors">RESEARCH</button>
+          <button onclick="voteRole('DEPLOY')" class="px-3 py-1 rounded-lg bg-white/5 hover:bg-[#ff5500]/20 hover:text-[#ff5500] border border-white/10 font-mono text-xs text-slate-200 transition-colors">DEPLOY</button>
+          <button onclick="voteRole('CREATE')" class="px-3 py-1 rounded-lg bg-white/5 hover:bg-[#ff5500]/20 hover:text-[#ff5500] border border-white/10 font-mono text-xs text-slate-200 transition-colors">CREATE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 10: DON'T JUST WATCH. BUILD. (with Fireworks & Student Idea Generator)
+         ========================================== -->
+    <section class="slide-container slide-hidden-next w-full max-w-6xl flex-col gap-5" data-slide="10" data-title="Don't Just Watch. Build." data-category="Call to Action">
+      <h2 class="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+        DON'T JUST WATCH. BUILD.
+      </h2>
+
+      <!-- 5-Step Action Flow (Exact from PPT) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        <div class="p-3 rounded-xl bg-black/40 border border-white/10 flex flex-col gap-1">
+          <div class="ppt-step-num text-xs">01</div>
+          <div class="text-xs font-bold text-white">Start</div>
+          <div class="text-[11px] text-slate-400">Python ➔ NumPy, Pandas ➔ Statistics</div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-black/40 border border-white/10 flex flex-col gap-1">
+          <div class="ppt-step-num text-xs">02</div>
+          <div class="text-xs font-bold text-white">Learn ML</div>
+          <div class="text-[11px] text-slate-400">Regression ➔ Trees ➔ Evaluation</div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-black/40 border border-white/10 flex flex-col gap-1 border-t-2 border-t-[#a3e635]">
+          <div class="ppt-step-num text-xs text-[#a3e635]">03</div>
+          <div class="text-xs font-bold text-white">Build Projects</div>
+          <div class="text-[11px] text-[#a3e635] font-bold">3–5 Small Projects</div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-black/40 border border-white/10 flex flex-col gap-1">
+          <div class="ppt-step-num text-xs">04</div>
+          <div class="text-xs font-bold text-white">Deep Learning</div>
+          <div class="text-[11px] text-slate-400">Neural Networks ➔ Transformers</div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-black/40 border border-white/10 flex flex-col gap-1">
+          <div class="ppt-step-num text-xs">05</div>
+          <div class="text-xs font-bold text-white">Go Professional</div>
+          <div class="text-[11px] text-slate-400">Deployment ➔ Cloud ➔ MLOps</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Authentic Resources (Left) -->
+        <div class="lg:col-span-6 flex flex-col gap-2.5">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider font-mono">
+            AUTHENTIC RESOURCES
+          </h3>
+          <ul class="space-y-1.5 text-xs text-slate-300 font-mono">
+            <li class="flex items-center gap-2">
+              <span class="text-[#ff5500]">•</span> Google Machine Learning Crash Course
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="text-[#ff5500]">•</span> Microsoft ML for Beginners
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="text-[#ff5500]">•</span> DeepLearning.AI Machine Learning Specialization
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="text-[#ff5500]">•</span> fast.ai • Practical Deep Learning for Coders
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="text-[#ff5500]">•</span> 3Blue1Brown • Neural Networks
+            </li>
+          </ul>
+        </div>
+
+        <!-- YOUR TURN (Right) -->
+        <div class="lg:col-span-6 bg-[#0d111e]/90 p-5 rounded-2xl border border-white/10 flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-black text-white uppercase tracking-tight">
+              YOUR TURN.
+            </h3>
+            <button onclick="celebrateGraduation()" class="px-2.5 py-1 rounded bg-[#ff5500]/20 text-[#ff5500] border border-[#ff5500]/40 text-xs font-mono hover:bg-[#ff5500]/30 transition-colors">
+              🎆 Launch Fireworks
+            </button>
+          </div>
+          <div class="space-y-1 text-xs text-slate-300">
+            <div>1. What problem around you generates data?</div>
+            <div>2. Could ML learn something from that data?</div>
+            <div>3. What would you build?</div>
+          </div>
+          <div class="text-xs text-slate-300 italic border-l-2 border-[#ff5500] pl-3 py-1 mt-1">
+            “You don't need to become an AI expert to start. You need a problem, some data, and the curiosity to experiment.”
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Byline (Exact from PPT) -->
+      <div class="pt-3 border-t border-white/10 text-xs font-mono font-semibold text-slate-400">
+        AYUSH VISHWAKARMA • Machine Learning • From Data to Intelligence
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       BOTTOM CONTROL BAR
+       ========================================== -->
+  <footer class="w-full px-6 py-3 flex items-center justify-between z-30 bg-[#0a0d1a]/90 backdrop-blur-xl border-t border-white/10 shrink-0">
+    <!-- Prev Slide -->
+    <div class="flex items-center gap-2">
+      <button onclick="prevSlide()" id="prev-btn" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-200 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        <span>Previous</span>
+      </button>
+      <span class="text-xs text-slate-500 font-mono hidden sm:inline">[←]</span>
+    </div>
+
+    <!-- Center Keyboard Hint -->
+    <div class="hidden md:flex items-center gap-3 text-xs text-slate-400 font-mono">
+      <span>Use <kbd class="px-1.5 py-0.5 rounded bg-white/10 text-slate-300">→</kbd> or <kbd class="px-1.5 py-0.5 rounded bg-white/10 text-slate-300">Space</kbd> to navigate</span>
+      <span>•</span>
+      <span>Press <kbd class="px-1.5 py-0.5 rounded bg-white/10 text-slate-300">O</kbd> for overview</span>
+    </div>
+
+    <!-- Next Slide -->
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-slate-500 font-mono hidden sm:inline">[→]</span>
+      <button onclick="nextSlide()" id="next-btn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[#ff5500] to-[#ff7700] text-xs font-semibold text-white shadow-lg shadow-orange-500/25 hover:from-[#ff6600] hover:to-[#ff8800] transition-all flex items-center gap-2">
+        <span>Next</span>
+        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </footer>
+
+  <!-- ==========================================
+       MODAL: Slide Overview Grid
+       ========================================== -->
+  <div id="overview-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex flex-col p-6 hidden">
+    <div class="flex items-center justify-between pb-4 border-b border-white/10">
+      <div class="flex items-center gap-3">
+        <i data-lucide="grid" class="w-5 h-5 text-[#ff5500]"></i>
+        <h3 class="text-lg font-bold text-white">All 10 Presentation Slides</h3>
+      </div>
+      <button onclick="toggleOverviewModal()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-6 overflow-y-auto" id="overview-grid">
+      <!-- Generated via JS -->
+    </div>
+  </div>
+
+  <!-- ==========================================
+       DRAWER: Teacher Speaker Notes
+       ========================================== -->
+  <aside id="notes-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-[#0a0d1a]/95 backdrop-blur-2xl border-l border-white/15 z-40 p-6 flex flex-col gap-4 transform translate-x-full transition-transform duration-300 shadow-2xl">
+    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+      <div class="flex items-center gap-2">
+        <i data-lucide="file-text" class="w-4 h-4 text-[#ff5500]"></i>
+        <span class="text-sm font-bold text-white">Ayush's Presenter Notes</span>
+      </div>
+      <button onclick="toggleNotesDrawer()" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto space-y-4 pr-1 text-xs text-slate-300 leading-relaxed" id="notes-content">
+      <!-- Loaded dynamically based on active slide -->
+    </div>
+
+    <div class="pt-3 border-t border-white/10 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+      <span>Shortcut: Press [N]</span>
+      <span class="text-[#ff5500]">Lecture Mode</span>
+    </div>
+  </aside>
+
+  <!-- ==========================================
+       JAVASCRIPT SIMULATION ENGINE & 3D/2D LOGIC
+       ========================================== -->
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+    let presentationSeconds = 0;
+    let timerInterval = null;
+
+    // Ayush's Teacher Speaking Notes for all 10 Reference Slides
+    const presenterNotes = {
+      1: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 1: Machine Learning Overview</h5>
+        <p><strong>Introduction:</strong> Welcome the students! Set the tone that ML is not magic or science fiction, but teaching computers to find statistical patterns in data.</p>
+        <p><strong>The 5-Step Pipeline:</strong> Walk them through the bottom bar: 01 DATA ➔ 02 LEARNING ➔ 03 MODEL ➔ 04 PREDICTION ➔ 05 DECISION. Every AI company in Silicon Valley follows this identical progression.</p>
+        <p><strong>Interactive 3D:</strong> Drag the 3D Neural Processor core on the right to demonstrate computational hardware acceleration!</p>
+      `,
+      2: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 2: Can a machine learn?</h5>
+        <p><strong>Opening Question:</strong> Ask students how Netflix or their phone camera knows what is in an image. Did a software engineer write 50,000 if/else statements? No!</p>
+        <p><strong>Engage the room:</strong> Have students vote on option A, B, or C before clicking the reveal button.</p>
+      `,
+      3: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 3: What actually is Machine Learning?</h5>
+        <p><strong>The Core Formula:</strong> Drill the difference between Rules + Data ➔ Output versus Data + Examples ➔ Model ➔ Prediction.</p>
+        <p><strong>Cat & Dog example:</strong> Ask: "How would you write code for a cat's ear?" What if the cat is lying down? Rules break; statistical models triumph.</p>
+      `,
+      4: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 4: How does ML learn?</h5>
+        <p><strong>The Three Pillars:</strong></p>
+        <ul class="list-disc pl-4 space-y-1">
+          <li><strong>Supervised:</strong> Teacher present, answer key given (see the live regression line).</li>
+          <li><strong>Unsupervised:</strong> Clustering data without ground truth (see K-means centroids grouping dots).</li>
+          <li><strong>Reinforcement:</strong> Rewards and penalties (watch the agent navigate to the goal).</li>
+        </ul>
+      `,
+      5: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 5: The AI Family Tree</h5>
+        <p><strong>Distinction:</strong> Clarify that AI is the umbrella term, ML is the data-driven branch, Deep Learning is multi-layer neural networks, and Generative AI produces novel artifacts rather than just classifications.</p>
+      `,
+      6: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 6: Meet GANs</h5>
+        <p><strong>The Art Forger & Detective Analogy:</strong> The Generator is a counterfeiter trying to print fake currency; the Discriminator is the police detective trying to spot fake bills. As they compete, both become world-class.</p>
+        <p><strong>Interactive test:</strong> Ask the students to guess which painting is AI generated before revealing both are synthetic.</p>
+      `,
+      7: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 7: ML Across Industries</h5>
+        <p><strong>Breadth:</strong> Emphasize that ML is not an isolated industry like agriculture or oil; it is a general-purpose technology like electricity or the internet.</p>
+        <p><strong>Run the 30s challenge:</strong> Click 'Start 30s' and call on 2 students to propose a dataset problem in their favorite industry.</p>
+      `,
+      8: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 8: Problem First</h5>
+        <p><strong>Practical Advice:</strong> Warn students against "AI looking for a problem". Successful engineers identify an authentic human friction point first, then determine if ML is the right tool.</p>
+      `,
+      9: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 9: What Skills Do You Need?</h5>
+        <p><strong>No Gatekeeping:</strong> Reassure students that they don't need a PhD in advanced mathematics to build their first project. The roadmap is: Python ➔ Data ➔ Basic ML ➔ Project ➔ Deep Learning.</p>
+      `,
+      10: `
+        <h5 class="text-sm font-bold text-white mb-2">Slide 10: Don't Just Watch. Build.</h5>
+        <p><strong>Actionable Finish:</strong> Conclude by asking the 3 "YOUR TURN" questions. Encourage everyone to open Google Colab or Kaggle this evening and train a simple model!</p>
+      `
+    };
+
+    function initIcons() {
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Presentation Elapsed Timer
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        presentationSeconds++;
+        const mins = String(Math.floor(presentationSeconds / 60)).padStart(2, '0');
+        const secs = String(presentationSeconds % 60).padStart(2, '0');
+        const display = document.getElementById('timer-display');
+        if (display) display.textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    // Slide Navigation
+    function goToSlide(n) {
+      if (n < 1 || n > totalSlides) return;
+      currentSlide = n;
+
+      const slides = document.querySelectorAll('.slide-container');
+      slides.forEach(slide => {
+        const slideNum = parseInt(slide.getAttribute('data-slide'));
+        slide.classList.remove('slide-active', 'slide-hidden-prev', 'slide-hidden-next');
+        if (slideNum === currentSlide) {
+          slide.classList.add('slide-active');
+        } else if (slideNum < currentSlide) {
+          slide.classList.add('slide-hidden-prev');
+        } else {
+          slide.classList.add('slide-hidden-next');
+        }
+      });
+
+      // Update Navigation Header
+      const activeSlideEl = document.querySelector(`.slide-container[data-slide="${currentSlide}"]`);
+      const title = activeSlideEl ? activeSlideEl.getAttribute('data-title') : '';
+
+      document.getElementById('slide-counter').textContent = `${String(currentSlide).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      document.getElementById('slide-topic-badge').textContent = `${String(currentSlide).padStart(2, '0')}. ${title}`;
+      const pct = (currentSlide / totalSlides) * 100;
+      document.getElementById('progress-bar-fill').style.width = `${pct}%`;
+
+      document.getElementById('prev-btn').disabled = (currentSlide === 1);
+      document.getElementById('next-btn').disabled = (currentSlide === totalSlides);
+
+      updateNotes();
+
+      // Trigger active slide canvas animations
+      if (currentSlide === 1) renderSlide1();
+      if (currentSlide === 2) renderSlide2();
+      if (currentSlide === 4) renderSlide4();
+      if (currentSlide === 5) renderSlide5();
+      if (currentSlide === 6) renderSlide6();
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) goToSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) goToSlide(currentSlide - 1);
+    }
+
+    function toggleNotesDrawer() {
+      const drawer = document.getElementById('notes-drawer');
+      drawer.classList.toggle('translate-x-full');
+      updateNotes();
+    }
+
+    function updateNotes() {
+      const content = document.getElementById('notes-content');
+      if (content && presenterNotes[currentSlide]) {
+        content.innerHTML = presenterNotes[currentSlide];
+      }
+    }
+
+    function toggleOverviewModal() {
+      const modal = document.getElementById('overview-modal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        renderOverviewGrid();
+      }
+    }
+
+    function renderOverviewGrid() {
+      const grid = document.getElementById('overview-grid');
+      grid.innerHTML = '';
+      const slides = document.querySelectorAll('.slide-container');
+      slides.forEach(slide => {
+        const num = slide.getAttribute('data-slide');
+        const title = slide.getAttribute('data-title');
+        const isCurrent = parseInt(num) === currentSlide;
+
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-xl cursor-pointer transition-all flex flex-col gap-1.5 ${
+          isCurrent 
+            ? 'bg-[#ff5500]/20 border-2 border-[#ff5500] text-white shadow-lg shadow-orange-500/20' 
+            : 'bg-black/50 hover:border-white/40 border border-white/10 text-slate-300'
+        }`;
+        card.onclick = () => {
+          goToSlide(parseInt(num));
+          toggleOverviewModal();
+        };
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono font-bold text-[#ff5500]">#${String(num).padStart(2, '0')}</span>
+          </div>
+          <div class="text-xs font-semibold leading-tight line-clamp-2">${title}</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    // Keyboard controls
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'o' || e.key === 'O') {
+        toggleOverviewModal();
+      } else if (e.key === 'n' || e.key === 'N') {
+        toggleNotesDrawer();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
+      } else if (e.key === 'Home') {
+        goToSlide(1);
+      } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+      }
+    });
+
+    // =========================================================================
+    // BACKGROUND 2D/3D ANIMATED MATRIX & EMBER FIELD
+    // =========================================================================
+    function initBackground() {
+      const canvas = document.getElementById('bg-canvas');
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = window.innerWidth;
+      let h = canvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      });
+
+      const embers = [];
+      for (let i = 0; i < 65; i++) {
+        embers.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: -Math.random() * 0.8 - 0.2, // Drift upward
+          r: Math.random() * 2 + 1,
+          color: Math.random() > 0.4 ? 'rgba(255, 85, 0, ' : 'rgba(163, 230, 53, '
+        });
+      }
+
+      function loop() {
+        ctx.clearRect(0, 0, w, h);
+
+        // Draw isometric grid lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
+        ctx.lineWidth = 1;
+        const spacing = 45;
+        for (let x = 0; x < w; x += spacing) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+        }
+        for (let y = 0; y < h; y += spacing) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+        }
+
+        // Draw embers
+        embers.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.y < 0) { p.y = h; p.x = Math.random() * w; }
+          if (p.x < 0 || p.x > w) p.vx *= -1;
+
+          ctx.fillStyle = p.color + '0.7)';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    // =========================================================================
+    // SLIDE 1: 3D NEURAL PROCESSOR CHIP (Three.js with Canvas Fallback)
+    // =========================================================================
+    let slide1Init = false;
+    function renderSlide1() {
+      if (slide1Init) return;
+      const canvas = document.getElementById('chip-canvas');
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width || 380;
+      const height = rect.height || 340;
+
+      // Check if THREE is available
+      if (typeof THREE !== 'undefined') {
+        try {
+          const scene = new THREE.Scene();
+          const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+          camera.position.set(0, 3, 5);
+          camera.lookAt(0, 0, 0);
+
+          const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+          renderer.setSize(width, height);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+          const group = new THREE.Group();
+          scene.add(group);
+
+          // Base ceramic plate
+          const baseGeom = new THREE.BoxGeometry(2.4, 0.25, 2.4);
+          const baseMat = new THREE.MeshStandardMaterial({ color: 0x0f1526, roughness: 0.2, metalness: 0.8 });
+          group.add(new THREE.Mesh(baseGeom, baseMat));
+
+          // Glowing Orange Wireframe Rim
+          const rimGeom = new THREE.BoxGeometry(2.1, 0.32, 2.1);
+          const rimMat = new THREE.MeshBasicMaterial({ color: 0xff5500, wireframe: true });
+          group.add(new THREE.Mesh(rimGeom, rimMat));
+
+          // Central Silicon Die
+          const dieGeom = new THREE.BoxGeometry(1.5, 0.4, 1.5);
+          const dieMat = new THREE.MeshStandardMaterial({ color: 0x03050a, roughness: 0.1, metalness: 0.95 });
+          group.add(new THREE.Mesh(dieGeom, dieMat));
+
+          // Gold pins around perimeter
+          for (let i = -1.1; i <= 1.1; i += 0.22) {
+            const pinGeom = new THREE.BoxGeometry(0.08, 0.12, 0.15);
+            const pinMat = new THREE.MeshBasicMaterial({ color: 0xff7700 });
+            const p1 = new THREE.Mesh(pinGeom, pinMat); p1.position.set(i, -0.05, 1.25); group.add(p1);
+            const p2 = new THREE.Mesh(pinGeom, pinMat); p2.position.set(i, -0.05, -1.25); group.add(p2);
+          }
+
+          // Lighting
+          scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+          const pointLight = new THREE.PointLight(0xff5500, 3.5, 8);
+          pointLight.position.set(0, 1.6, 0);
+          scene.add(pointLight);
+
+          // Mouse Drag Rotation
+          let isDragging = false;
+          let prevMouse = { x: 0, y: 0 };
+          canvas.addEventListener('mousedown', (e) => { isDragging = true; prevMouse = { x: e.clientX, y: e.clientY }; });
+          window.addEventListener('mouseup', () => isDragging = false);
+          window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            group.rotation.y += (e.clientX - prevMouse.x) * 0.01;
+            group.rotation.x += (e.clientY - prevMouse.y) * 0.01;
+            prevMouse = { x: e.clientX, y: e.clientY };
+          });
+
+          function anim() {
+            requestAnimationFrame(anim);
+            if (!isDragging) {
+              group.rotation.y += 0.008;
+              group.rotation.x = 0.4 + 0.08 * Math.sin(Date.now() * 0.001);
+            }
+            renderer.render(scene, camera);
+          }
+          anim();
+          slide1Init = true;
+          return;
+        } catch (e) {
+          console.warn("Three.js WebGL error, falling back to 2D canvas", e);
+        }
+      }
+
+      // Robust Pure HTML5 Canvas 2D/3D Fallback
+      render2DChipFallback(canvas);
+      slide1Init = true;
+    }
+
+    function render2DChipFallback(canvas) {
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = canvas.clientWidth || 360;
+      let h = canvas.height = canvas.clientHeight || 300;
+      let angle = 0;
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+        angle += 0.015;
+
+        const cx = w / 2;
+        const cy = h / 2;
+        const size = 90;
+
+        // Glowing Core
+        const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 120);
+        grad.addColorStop(0, 'rgba(255, 85, 0, 0.6)');
+        grad.addColorStop(1, 'rgba(255, 85, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(cx, cy, 120, 0, Math.PI * 2); ctx.fill();
+
+        // Rotating Isometric Square
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#ff5500';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#ff5500';
+        ctx.shadowBlur = 20;
+        ctx.fillRect(-size, -size, size * 2, size * 2);
+        ctx.strokeRect(-size, -size, size * 2, size * 2);
+
+        // Inner Die
+        ctx.fillStyle = '#020617';
+        ctx.strokeStyle = '#a3e635';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#a3e635';
+        ctx.fillRect(-size * 0.6, -size * 0.6, size * 1.2, size * 1.2);
+        ctx.strokeRect(-size * 0.6, -size * 0.6, size * 1.2, size * 1.2);
+        ctx.restore();
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // =========================================================================
+    // SLIDE 2: 2D PATTERN RECOGNITION INTERACTIVE SCATTER
+    // =========================================================================
+    let s2Points = [];
+    let s2Init = false;
+    function renderSlide2() {
+      const canvas = document.getElementById('slide2-canvas');
+      if (!canvas || s2Init) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Seed initial points (Spam vs Ham / Red vs Green)
+      resetSlide2Points();
+
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (w / rect.width);
+        const y = (e.clientY - rect.top) * (h / rect.height);
+        const isSpam = y > h * 0.5 + (x - w * 0.5) * 0.4;
+        s2Points.push({ x, y, isSpam });
+      });
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+
+        // Draw decision boundary line
+        ctx.strokeStyle = '#ff5500';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.3);
+        ctx.lineTo(w, h * 0.7);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Points
+        s2Points.forEach(p => {
+          ctx.fillStyle = p.isSpam ? '#ff5500' : '#a3e635';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        });
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+      s2Init = true;
+    }
+
+    function resetSlide2Points() {
+      s2Points = [
+        { x: 50, y: 40, isSpam: false }, { x: 90, y: 60, isSpam: false }, { x: 130, y: 45, isSpam: false },
+        { x: 70, y: 90, isSpam: false }, { x: 110, y: 110, isSpam: false },
+        { x: 230, y: 120, isSpam: true }, { x: 270, y: 140, isSpam: true }, { x: 300, y: 115, isSpam: true },
+        { x: 250, y: 155, isSpam: true }, { x: 210, y: 145, isSpam: true }
+      ];
+    }
+
+    function chooseSlide2Option(opt) {
+      ['A', 'B', 'C'].forEach(o => {
+        const btn = document.getElementById(`s2-opt-${o}`);
+        const badge = document.getElementById(`s2-badge-${o}`);
+        if (o === opt) {
+          btn.classList.add('border-[#ff5500]', 'bg-[#ff5500]/10');
+          if (badge) badge.classList.remove('hidden');
+        } else {
+          btn.classList.remove('border-[#ff5500]', 'bg-[#ff5500]/10');
+          if (badge) badge.classList.add('hidden');
+        }
+      });
+      if (opt === 'B') triggerConfettiSlide2();
+    }
+
+    function triggerConfettiSlide2() {
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.8 },
+        colors: ['#ff5500', '#a3e635', '#ffffff']
+      });
+    }
+
+    // =========================================================================
+    // SLIDE 3: FAN TESTER
+    // =========================================================================
+    function updateFanTest(temp) {
+      document.getElementById('temp-val').textContent = `${temp}°C`;
+      const status = document.getElementById('fan-status');
+      if (parseInt(temp) > 30) {
+        status.textContent = "FAN: ON";
+        status.className = "px-2 py-0.5 rounded font-mono font-bold bg-emerald-500/20 text-emerald-400";
+      } else {
+        status.textContent = "FAN: OFF";
+        status.className = "px-2 py-0.5 rounded font-mono font-bold bg-rose-500/20 text-rose-400";
+      }
+    }
+
+    // =========================================================================
+    // SLIDE 4: 3 LIVE 2D VISUALIZERS (Regression, K-Means, RL)
+    // =========================================================================
+    let s4Init = false;
+    function renderSlide4() {
+      if (s4Init) return;
+      s4Init = true;
+
+      // 1. Supervised Regression
+      const cSup = document.getElementById('supervised-canvas');
+      if (cSup) {
+        const ctx = cSup.getContext('2d');
+        let t = 0;
+        function drawSup() {
+          ctx.clearRect(0, 0, cSup.width, cSup.height);
+          t += 0.02;
+
+          // Points
+          const pts = [
+            { x: 30, y: 65 }, { x: 70, y: 55 }, { x: 110, y: 40 }, { x: 150, y: 30 }, { x: 190, y: 18 }
+          ];
+          ctx.fillStyle = '#06b6d4';
+          pts.forEach((p, i) => {
+            const dy = Math.sin(t + i) * 3;
+            ctx.beginPath(); ctx.arc(p.x, p.y + dy, 3.5, 0, Math.PI * 2); ctx.fill();
+          });
+
+          // Fitted Line
+          ctx.strokeStyle = '#ff5500';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(20, 70);
+          ctx.lineTo(200, 15);
+          ctx.stroke();
+
+          requestAnimationFrame(drawSup);
+        }
+        drawSup();
+      }
+
+      // 2. Unsupervised K-Means
+      const cUns = document.getElementById('unsupervised-canvas');
+      if (cUns) {
+        const ctx = cUns.getContext('2d');
+        let kt = 0;
+        function drawUns() {
+          ctx.clearRect(0, 0, cUns.width, cUns.height);
+          kt += 0.025;
+
+          // Cluster 1 (Cyan)
+          ctx.fillStyle = 'rgba(6, 182, 212, 0.2)';
+          ctx.strokeStyle = '#06b6d4';
+          ctx.beginPath(); ctx.arc(60, 42, 28 + Math.sin(kt)*2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+          // Cluster 2 (Purple)
+          ctx.fillStyle = 'rgba(168, 85, 247, 0.2)';
+          ctx.strokeStyle = '#a855f7';
+          ctx.beginPath(); ctx.arc(160, 42, 28 + Math.cos(kt)*2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+          // Centroids
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(60, 42, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(160, 42, 3, 0, Math.PI * 2); ctx.fill();
+
+          requestAnimationFrame(drawUns);
+        }
+        drawUns();
+      }
+
+      // 3. Reinforcement Learning Agent
+      const cRl = document.getElementById('rl-canvas');
+      if (cRl) {
+        const ctx = cRl.getContext('2d');
+        let agentX = 20;
+        function drawRl() {
+          ctx.clearRect(0, 0, cRl.width, cRl.height);
+          agentX += 0.8;
+          if (agentX > 190) agentX = 20;
+
+          // Track
+          ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(15, 20, 190, 45);
+
+          // Goal Reward
+          ctx.fillStyle = '#a3e635';
+          ctx.beginPath(); ctx.arc(185, 42, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.font = '8px monospace';
+          ctx.fillStyle = '#a3e635';
+          ctx.fillText("+100", 175, 28);
+
+          // Agent
+          ctx.fillStyle = '#ff5500';
+          ctx.beginPath(); ctx.arc(agentX, 42, 6, 0, Math.PI * 2); ctx.fill();
+
+          requestAnimationFrame(drawRl);
+        }
+        drawRl();
+      }
+    }
+
+    // =========================================================================
+    // SLIDE 5: 2D LIVING AI FAMILY TREE CANVAS
+    // =========================================================================
+    let s5Init = false;
+    function renderSlide5() {
+      const canvas = document.getElementById('tree-canvas');
+      if (!canvas || s5Init) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      let pulse = 0;
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+        pulse += 0.03;
+
+        // Connections
+        ctx.strokeStyle = 'rgba(255, 85, 0, 0.4)';
+        ctx.lineWidth = 2;
+
+        // Root (AI) to ML
+        ctx.beginPath(); ctx.moveTo(w/2, 35); ctx.lineTo(w/2, 85); ctx.stroke();
+        // ML to Trad & Deep
+        ctx.beginPath(); ctx.moveTo(w/2, 85); ctx.lineTo(120, 140); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(w/2, 85); ctx.lineTo(360, 140); ctx.stroke();
+        // Deep to Architectures
+        ctx.beginPath(); ctx.moveTo(360, 140); ctx.lineTo(300, 200); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(360, 140); ctx.lineTo(420, 200); ctx.stroke();
+
+        // Nodes
+        drawNode(ctx, w/2, 35, "ARTIFICIAL INTELLIGENCE", "#ffffff", "#0d111e");
+        drawNode(ctx, w/2, 85, "MACHINE LEARNING", "#ff5500", "#ff5500");
+        drawNode(ctx, 120, 140, "Traditional ML", "#94a3b8", "#94a3b8");
+        drawNode(ctx, 360, 140, "Deep Learning", "#a3e635", "#a3e635");
+        drawNode(ctx, 300, 200, "Transformers", "#ff5500", "#ff5500");
+        drawNode(ctx, 420, 200, "Generative AI", "#ec4899", "#ec4899");
+
+        requestAnimationFrame(draw);
+      }
+
+      function drawNode(ctx, x, y, label, textColor, glowColor) {
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = glowColor;
+        ctx.lineWidth = 1.5;
+
+        const pad = 10;
+        ctx.font = '10px JetBrains Mono';
+        const tw = ctx.measureText(label).width;
+        ctx.fillRect(x - tw/2 - pad, y - 12, tw + pad*2, 24);
+        ctx.strokeRect(x - tw/2 - pad, y - 12, tw + pad*2, 24);
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = textColor;
+        ctx.fillText(label, x - tw/2, y + 4);
+      }
+
+      draw();
+      s5Init = true;
+    }
+
+    // =========================================================================
+    // SLIDE 6: 2D GAN ARENA CANVAS & TURING GUESS
+    // =========================================================================
+    let s6Init = false;
+    function renderSlide6() {
+      const canvas = document.getElementById('gan-canvas');
+      if (!canvas || s6Init) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      let gt = 0;
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+        gt += 0.05;
+
+        // Waveform: Generator noise morphing into smooth signal
+        ctx.strokeStyle = '#ff5500';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let x = 0; x < w * 0.45; x++) {
+          const noise = (Math.random() - 0.5) * (15 / (1 + x * 0.05));
+          const y = h/2 + Math.sin(x * 0.1 + gt) * 12 + noise;
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Discriminator Pulse Wave
+        ctx.strokeStyle = '#a3e635';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let x = w * 0.55; x < w; x++) {
+          const y = h/2 + Math.sin(x * 0.15 - gt * 2) * 10;
+          if (x === w * 0.55) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+      s6Init = true;
+    }
+
+    function guessPainting(choice) {
+      confetti({ particleCount: 30, spread: 50 });
+      alert(`You picked Sample ${choice}! But in fact, BOTH Sample A and Sample B were generated by AI.`);
+    }
+
+    // =========================================================================
+    // SLIDE 7: 30s CHALLENGE & INDUSTRY LASER
+    // =========================================================================
+    let challengeInterval = null;
+    let challengeSeconds = 30;
+    function startChallengeTimer() {
+      clearInterval(challengeInterval);
+      challengeSeconds = 30;
+      const display = document.getElementById('challenge-timer');
+
+      challengeInterval = setInterval(() => {
+        challengeSeconds--;
+        display.textContent = `00:${String(challengeSeconds).padStart(2, '0')}`;
+        if (challengeSeconds <= 0) {
+          clearInterval(challengeInterval);
+          display.textContent = "TIME UP!";
+          confetti({ particleCount: 50, spread: 80 });
+        }
+      }, 1000);
+    }
+
+    function laserHighlightIndustry(idx) {
+      confetti({ particleCount: 15, spread: 40 });
+    }
+
+    // =========================================================================
+    // SLIDE 8: STAGE PULSE
+    // =========================================================================
+    function pulseStage(num) {
+      confetti({ particleCount: 10, spread: 30 });
+    }
+
+    // =========================================================================
+    // SLIDE 9: LIVE POLL
+    // =========================================================================
+    function voteRole(role) {
+      confetti({ particleCount: 35, spread: 60 });
+      alert(`Awesome! You voted for: ${role}`);
+    }
+
+    // =========================================================================
+    // SLIDE 10: FIREWORKS CELEBRATION
+    // =========================================================================
+    function celebrateGraduation() {
+      confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 } });
+      setTimeout(() => confetti({ particleCount: 50, spread: 80, origin: { x: 0.2 } }), 300);
+      setTimeout(() => confetti({ particleCount: 50, spread: 80, origin: { x: 0.8 } }), 600);
+    }
+
+    // =========================================================================
+    // INITIALIZATION ON LOAD
+    // =========================================================================
+    window.addEventListener('load', () => {
+      initIcons();
+      startTimer();
+      initBackground();
+      goToSlide(1);
+    });
+  </script>
+</body>
+</html>
